@@ -1,19 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getThumbnail } from '../mockApi';
-
-function hexToRgb(hex) {
-    const normalized = hex.replace('#', '');
-    if (normalized.length !== 6) {
-        return null;
-    }
-
-    return {
-        r: Number.parseInt(normalized.slice(0, 2), 16),
-        g: Number.parseInt(normalized.slice(2, 4), 16),
-        b: Number.parseInt(normalized.slice(4, 6), 16),
-    };
-}
+import { drawBinarizedSource } from '../utils/binarize';
 
 export default function Preview(){
     const { filename } = useParams();
@@ -95,42 +83,7 @@ export default function Preview(){
             return;
         }
 
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            return;
-        }
-
-        ctx.drawImage(img, 0, 0);
-
-        const target = hexToRgb(color);
-        if (!target) {
-            return;
-        }
-
-        const tol = Number(tolerance);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const px = data.data;
-
-        for (let i = 0; i < px.length; i += 4) {
-            // px[i]     = red channel of this pixel (0-255)
-            // px[i + 1] = green channel
-            // px[i + 2] = blue channel
-            // px[i + 3] = alpha (transparency, usually leave alone)
-            const dr = px[i] - target.r;
-            const dg = px[i + 1] - target.g;
-            const db = px[i + 2] - target.b;
-            const distance = Math.sqrt((dr * dr) + (dg * dg) + (db * db));
-            const value = distance <= tol ? 255 : 0;
-
-            px[i] = value;
-            px[i + 1] = value;
-            px[i + 2] = value;
-        }
-
-        ctx.putImageData(data, 0, 0);
+        drawBinarizedSource(img, canvas, color, tolerance);
     }, [imageReady, color, tolerance]);
 
     const loading = loadedFilename !== filename;

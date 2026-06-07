@@ -33,7 +33,12 @@ export async function getThumbnail(filename){
 
 export async function submitProcessingJob(filename, targetColor, threshold){
     await delay(500);
-    return {jobId: `mock-${Date.now()}`};
+    return {
+        jobId: `mock-${Date.now()}`,
+        filename,
+        targetColor,
+        threshold,
+    };
 }
 
 export async function getJobStatus(jobId){
